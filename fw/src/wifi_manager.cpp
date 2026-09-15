@@ -139,6 +139,7 @@ static void wifi_manager_stop_portal() {
     WiFi.mode(WIFI_OFF);
     s_portal_running = false;
     g_wifi_ap_active = false;
+    inactivity_reset();
     LOG_INFO("[WiFi] Config Portal stopped.");
 
     // Sync UI Switch if it exists

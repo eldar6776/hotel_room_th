@@ -16,6 +16,7 @@ lv_obj_t * ui_BtnPrevThermostat = NULL;
 lv_obj_t * ui_LabelRoomTemp = NULL;
 lv_obj_t * ui_ImageHeatStatus = NULL;
 lv_obj_t * ui_ImageCoolStatus = NULL;
+lv_obj_t * ui_LabelActiveFanSpeed = NULL;
 // event funtions
 void ui_event_Thermostat(lv_event_t * e)
 {
@@ -231,6 +232,17 @@ void ui_Thermostat_screen_init(void)
     lv_obj_set_style_img_recolor(ui_ImageCoolStatus, lv_color_hex(0x00BFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_ImageCoolStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    // Independent sibling: updating the speed never changes either mode icon.
+    ui_LabelActiveFanSpeed = lv_label_create(ui_TileThermostat);
+    lv_obj_set_width(ui_LabelActiveFanSpeed, 48);
+    lv_obj_set_align(ui_LabelActiveFanSpeed, LV_ALIGN_TOP_RIGHT);
+    lv_obj_set_y(ui_LabelActiveFanSpeed, 54);
+    lv_obj_set_style_text_align(ui_LabelActiveFanSpeed, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(ui_LabelActiveFanSpeed, &lv_font_montserrat_18, 0);
+    lv_obj_set_style_text_color(ui_LabelActiveFanSpeed, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_clear_flag(ui_LabelActiveFanSpeed, LV_OBJ_FLAG_CLICKABLE);
+    lv_label_set_text(ui_LabelActiveFanSpeed, "");
+
     lv_obj_add_event_cb(ui_ArcTemp, ui_event_ArcTemp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnNextThermostat, ui_event_BtnNextThermostat, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnFan, ui_event_BtnFan, LV_EVENT_ALL, NULL);
@@ -255,6 +267,7 @@ void ui_Thermostat_screen_destroy(void)
     ui_LabelRoomTemp = NULL;
     ui_ImageHeatStatus = NULL;
     ui_ImageCoolStatus = NULL;
+    ui_LabelActiveFanSpeed = NULL;
 
 }
 

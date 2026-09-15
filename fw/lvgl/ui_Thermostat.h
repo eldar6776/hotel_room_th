@@ -30,6 +30,7 @@ extern lv_obj_t * ui_BtnPrevThermostat;
 extern lv_obj_t * ui_LabelRoomTemp;
 extern lv_obj_t * ui_ImageHeatStatus;
 extern lv_obj_t * ui_ImageCoolStatus;
+extern lv_obj_t * ui_LabelActiveFanSpeed;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

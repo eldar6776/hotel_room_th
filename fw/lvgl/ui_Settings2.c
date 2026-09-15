@@ -4,6 +4,9 @@
 // Project name: HotelRoomThermostat
 
 #include "ui.h"
+#include "settings_limits.h"
+extern lv_obj_t *ui_DropSelectTheme;
+extern void action_theme_changed(lv_event_t *e);
 
 lv_obj_t * ui_Settings2 = NULL;
 lv_obj_t * ui_LabelHysteresis = NULL;
@@ -117,7 +120,7 @@ void ui_Settings2_screen_init(void)
     lv_label_set_text(ui_LabelHysteresis, "Hysteresis (Base)");
 
     ui_DropHysteresis = lv_dropdown_create(ui_Settings2);
-    lv_dropdown_set_options(ui_DropHysteresis, "0.2\n0.5\n1.0\n1.2\n1.5\n2.0");
+    lv_dropdown_set_options(ui_DropHysteresis, "0.2\n0.3\n0.4\n0.5\n0.6\n0.7\n0.8\n0.9\n1.0\n1.1\n1.2\n1.3\n1.4\n1.5\n1.6\n1.7\n1.8\n1.9\n2.0");
     lv_obj_set_width(ui_DropHysteresis, 200);
     lv_obj_set_height(ui_DropHysteresis, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_DropHysteresis, -20);
@@ -133,7 +136,7 @@ void ui_Settings2_screen_init(void)
     lv_label_set_text(ui_LabelStageStep, "Stage Step");
 
     ui_DropStageStep = lv_dropdown_create(ui_Settings2);
-    lv_dropdown_set_options(ui_DropStageStep, "0.5\n1.0\n1.5\n2.0\n2.5");
+    lv_dropdown_set_options(ui_DropStageStep, "0.5\n0.6\n0.7\n0.8\n0.9\n1.0\n1.1\n1.2\n1.3\n1.4\n1.5\n1.6\n1.7\n1.8\n1.9\n2.0\n2.1\n2.2\n2.3\n2.4\n2.5");
     lv_obj_set_width(ui_DropStageStep, 200);
     lv_obj_set_height(ui_DropStageStep, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_DropStageStep, -20);
@@ -155,7 +158,7 @@ void ui_Settings2_screen_init(void)
     lv_obj_set_y(ui_SpinSensorOffset, 180);
     lv_obj_set_align(ui_SpinSensorOffset, LV_ALIGN_TOP_RIGHT);
     lv_spinbox_set_digit_format(ui_SpinSensorOffset, 3, 2);
-    lv_spinbox_set_range(ui_SpinSensorOffset, -999, 999);
+    lv_spinbox_set_range(ui_SpinSensorOffset, SENSOR_OFFSET_MIN_X10, SENSOR_OFFSET_MAX_X10);
     lv_spinbox_set_cursor_pos(ui_SpinSensorOffset, 1 - 1);
     lv_obj_set_style_text_align(ui_SpinSensorOffset, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SpinSensorOffset, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -233,6 +236,15 @@ void ui_Settings2_screen_init(void)
     lv_obj_add_event_cb(ui_BtnNext2, ui_event_BtnNext2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Settings2, ui_event_Settings2, LV_EVENT_ALL, NULL);
 
+    lv_obj_t *theme_label=lv_label_create(ui_Settings2);
+    lv_label_set_text(theme_label, "Theme");
+    lv_obj_set_pos(theme_label, 25, 270);
+    ui_DropSelectTheme=lv_dropdown_create(ui_Settings2);
+    lv_obj_set_size(ui_DropSelectTheme, 150, 45);
+    lv_obj_set_pos(ui_DropSelectTheme, 305, 255);
+    lv_dropdown_set_options(ui_DropSelectTheme, "NONE\nLOGO");
+    lv_obj_add_event_cb(ui_DropSelectTheme, action_theme_changed, LV_EVENT_VALUE_CHANGED, NULL);
+
 }
 
 void ui_Settings2_screen_destroy(void)
@@ -241,6 +253,7 @@ void ui_Settings2_screen_destroy(void)
 
     // NULL screen variables
     ui_Settings2 = NULL;
+    ui_DropSelectTheme = NULL;
     ui_LabelHysteresis = NULL;
     ui_DropHysteresis = NULL;
     ui_LabelStageStep = NULL;

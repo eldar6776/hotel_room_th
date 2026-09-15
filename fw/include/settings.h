@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include "hal.h"
+#include "settings_limits.h"
 
 // ── Dirty flag bitmask (FSD §5.1) ────────────────────────────────────────────
 typedef enum {
@@ -49,8 +50,14 @@ extern bool          g_wifi_ap_active;
 #ifdef __cplusplus
 extern "C" {
 #endif
+sys_config_t *settings_edit_config(void);
+void settings_edit_begin(void);
+void settings_edit_cancel(void);
+void settings_edit_mark(uint32_t flag);
+bool settings_edit_refresh(void);
+bool settings_edit_save(void);
 void settings_init(void);               // load from NVS
-void settings_save_dirty(void);         // write only dirty fields → NVS (immediate)
+bool settings_save_dirty(void);         // write only dirty fields → NVS (immediate)
 void settings_schedule_save(void);      // schedule NVS write 3 s after last call
 void settings_tick(void);               // call from main loop — fires deferred save
 void settings_reset_dirty(void);

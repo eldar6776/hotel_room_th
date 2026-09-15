@@ -3,7 +3,7 @@
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
-#define VERSION_PATCH 241
-#define BUILD_DATE "2026-05-30 17:13:58"
+#define VERSION_PATCH 283
+#define BUILD_DATE "2026-09-15 17:07:21"
 
 #endif

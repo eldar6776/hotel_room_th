@@ -1,6 +1,7 @@
 #include "modbus_handler.h"
 #include "settings.h"
 #include <sys/time.h>
+#include <math.h>
 #include "debug_logger.h"
 #include "hal.h"
 #include "hvac.h"  // for hvac_get_room_temp(), hvac_relay_active()
@@ -136,7 +137,7 @@ static uint16_t cb_hreg_write(TRegister *reg, uint16_t val)
             }
             break;
         case MB_REG_SENSOR_OFFSET:
-            val = constrain((int16_t)val, -50, 50);
+            val = (uint16_t)settings_clamp_sensor_offset((int16_t)val);
             if (g_sys_cfg.sensor_offset_x10 != (int16_t)val) {
                 g_sys_cfg.sensor_offset_x10 = (int16_t)val;
                 g_dirty_flags |= FLAG_SENSOR_OFFSET;
@@ -324,8 +325,8 @@ void modbus_sync_from_settings(void)
 void modbus_update_inputs(void)
 {
     // Input Register 0: Current temperature x10
-    float temp_c = hvac_get_room_temp();
-    g_mb.ireg[MB_IREG_CURRENT_TEMP] = (uint16_t)(temp_c * 10.0f);
+    float temp_c = hvac_get_room_temp() + g_sys_cfg.sensor_offset_x10 / 10.0f;
+    g_mb.ireg[MB_IREG_CURRENT_TEMP] = (uint16_t)(int16_t)lroundf(temp_c * 10.0f);
     s_mb.Ireg(MB_IREG_CURRENT_TEMP, g_mb.ireg[MB_IREG_CURRENT_TEMP]);
 
     // Input Register 1: Target temperature x10 (mirror from holding reg)

@@ -100,7 +100,7 @@ void ui_Settings1_screen_init(void)
     lv_label_set_text(ui_LabelMinTemp, "Min Temp");
 
     ui_DropMinTemp = lv_dropdown_create(ui_Settings1);
-    lv_dropdown_set_options(ui_DropMinTemp, "10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20");
+    lv_dropdown_set_options(ui_DropMinTemp, "10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24");
     lv_obj_set_width(ui_DropMinTemp, 200);
     lv_obj_set_height(ui_DropMinTemp, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_DropMinTemp, -20);
@@ -116,7 +116,7 @@ void ui_Settings1_screen_init(void)
     lv_label_set_text(ui_LabelMaxTemp, "Max Temp");
 
     ui_DropMaxTemp = lv_dropdown_create(ui_Settings1);
-    lv_dropdown_set_options(ui_DropMaxTemp, "25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35");
+    lv_dropdown_set_options(ui_DropMaxTemp, "25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40");
     lv_obj_set_width(ui_DropMaxTemp, 200);
     lv_obj_set_height(ui_DropMaxTemp, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_DropMaxTemp, -20);

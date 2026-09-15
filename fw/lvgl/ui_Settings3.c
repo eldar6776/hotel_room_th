@@ -138,7 +138,7 @@ void ui_Settings3_screen_init(void)
     lv_label_set_text(ui_LabelBrightHigh, "Brightness High");
 
     ui_SliderBrightHigh = lv_slider_create(ui_Settings3);
-    lv_slider_set_range(ui_SliderBrightHigh, 10, 100);
+    lv_slider_set_range(ui_SliderBrightHigh, 0, 100);
     lv_slider_set_value(ui_SliderBrightHigh, 0, LV_ANIM_OFF);
     if(lv_slider_get_mode(ui_SliderBrightHigh) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(ui_SliderBrightHigh, 0,
                                                                                                      LV_ANIM_OFF);
@@ -195,7 +195,7 @@ void ui_Settings3_screen_init(void)
     lv_obj_set_y(ui_SpinModbusAddr, 270);
     lv_obj_set_align(ui_SpinModbusAddr, LV_ALIGN_TOP_RIGHT);
     lv_spinbox_set_digit_format(ui_SpinModbusAddr, 3, 0);
-    lv_spinbox_set_range(ui_SpinModbusAddr, 0, 255);
+    lv_spinbox_set_range(ui_SpinModbusAddr, 1, 247);
     lv_spinbox_set_cursor_pos(ui_SpinModbusAddr, 1 - 1);
     lv_obj_set_style_text_align(ui_SpinModbusAddr, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SpinModbusAddr, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);

@@ -44,6 +44,8 @@ extern lv_obj_t *ui_DropTimeout;
 extern lv_obj_t *ui_SpinModbusAddr;
 extern lv_obj_t *ui_SwitchStartAp;
 lv_obj_t *ui_DropSelectTheme = NULL;
+static bool s_loading_settings = false;
+#define EDIT_CFG (*settings_edit_config())
 extern lv_obj_t *ui_ButtonDnd;
 extern lv_obj_t *ui_ButtonMur;
 
@@ -61,10 +63,12 @@ extern void _ui_screen_change(lv_obj_t ** target, lv_scr_load_anim_t fademode, i
 // Settings3 init wrapper — initialise sliders from NVS values
 static void ui_Settings3_screen_init_wrapped(void)
 {
+    s_loading_settings = true;
     ui_Settings3_screen_init();
     // Map NVS values (0-1023) → slider range (0-100)
-    lv_slider_set_value(ui_SliderBrightHigh, g_sys_cfg.bright_high * 100 / 1023, LV_ANIM_OFF);
-    lv_slider_set_value(ui_SliderBrightLow,  g_sys_cfg.bright_low  * 100 / 1023, LV_ANIM_OFF);
+    lv_slider_set_value(ui_SliderBrightHigh, (EDIT_CFG.bright_high * 100 + 511) / 1023, LV_ANIM_OFF);
+    lv_slider_set_value(ui_SliderBrightLow,  (EDIT_CFG.bright_low * 100 + 511) / 1023, LV_ANIM_OFF);
+    s_loading_settings = false;
 }
 // Forward declaration of helper function
 static uint16_t get_dropdown_index_by_value(lv_obj_t *obj, int value, const int *table, size_t size);
@@ -72,60 +76,69 @@ static uint16_t get_dropdown_index_by_value(lv_obj_t *obj, int value, const int 
 // Called every time Settings1 screen becomes visible
 void settings1_loaded_cb(lv_event_t *e)
 {
+    s_loading_settings = true;
+    settings_edit_refresh();
     (void)e;
     LOG_C_INFO("[UI] Syncing Screen 1 widgets to RAM config...");
-    if (ui_DropMinTemp) lv_dropdown_set_selected(ui_DropMinTemp, (uint16_t)(g_sys_cfg.temp_min - 10));
-    if (ui_DropMaxTemp) lv_dropdown_set_selected(ui_DropMaxTemp, (uint16_t)(g_sys_cfg.temp_max - 25));
-    if (ui_DropMode)    lv_dropdown_set_selected(ui_DropMode,    g_sys_cfg.hvac_mode);
+    if (ui_DropMinTemp) lv_dropdown_set_selected(ui_DropMinTemp, (uint16_t)(EDIT_CFG.temp_min - 10));
+    if (ui_DropMaxTemp) lv_dropdown_set_selected(ui_DropMaxTemp, (uint16_t)(EDIT_CFG.temp_max - 25));
+    if (ui_DropMode)    lv_dropdown_set_selected(ui_DropMode,    EDIT_CFG.hvac_mode);
     
     // Control Type: Index 0="1-Relay" (val 1), Index 1="3-Speed Fan" (val 0)
     if (ui_DropCtrlType) {
-        lv_dropdown_set_selected(ui_DropCtrlType, (g_sys_cfg.ctrl_type == 0) ? 1 : 0);
+        lv_dropdown_set_selected(ui_DropCtrlType, (EDIT_CFG.ctrl_type == 0) ? 1 : 0);
     }
+    s_loading_settings = false;
 }
 
 // Called every time Settings2 screen becomes visible — sync all advanced widgets
 void settings2_loaded_cb(lv_event_t *e)
 {
+    s_loading_settings = true;
+    settings_edit_refresh();
     (void)e;
     LOG_C_INFO("[UI] Syncing Screen 2 widgets to RAM config...");
-    static const int hyst_table[] = {2, 5, 10, 12, 15, 20};
+    static const int hyst_table[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
     if (ui_DropHysteresis) {
-        lv_dropdown_set_selected(ui_DropHysteresis, get_dropdown_index_by_value(ui_DropHysteresis, g_sys_cfg.hysteresis_x10, hyst_table, 6));
+        lv_dropdown_set_selected(ui_DropHysteresis, get_dropdown_index_by_value(ui_DropHysteresis, EDIT_CFG.hysteresis_x10, hyst_table, 19));
     }
 
-    static const int stage_table[] = {5, 10, 15, 20, 25};
+    static const int stage_table[] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
     if (ui_DropStageStep) {
-        lv_dropdown_set_selected(ui_DropStageStep, get_dropdown_index_by_value(ui_DropStageStep, g_sys_cfg.stage_step_x10, stage_table, 5));
+        lv_dropdown_set_selected(ui_DropStageStep, get_dropdown_index_by_value(ui_DropStageStep, EDIT_CFG.stage_step_x10, stage_table, 21));
     }
 
     if (ui_SpinSensorOffset) {
-        lv_spinbox_set_value(ui_SpinSensorOffset, g_sys_cfg.sensor_offset_x10);
+        lv_spinbox_set_value(ui_SpinSensorOffset, EDIT_CFG.sensor_offset_x10);
     }
 
     if (ui_DropSelectTheme) {
-        lv_dropdown_set_selected(ui_DropSelectTheme, g_sys_cfg.theme_select);
+        lv_dropdown_set_selected(ui_DropSelectTheme, EDIT_CFG.theme_select);
     }
+    s_loading_settings = false;
 }
 
 // Called every time Settings3 screen becomes visible (swipe or direct load)
 void settings3_loaded_cb(lv_event_t *e)
 {
+    s_loading_settings = true;
+    settings_edit_refresh();
     (void)e;
     LOG_C_INFO("[UI] Syncing Screen 3 widgets to RAM config...");
-    if (ui_SliderBrightHigh) lv_slider_set_value(ui_SliderBrightHigh, g_sys_cfg.bright_high * 100 / 1023, LV_ANIM_OFF);
-    if (ui_SliderBrightLow)  lv_slider_set_value(ui_SliderBrightLow,  g_sys_cfg.bright_low  * 100 / 1023, LV_ANIM_OFF);
+    if (ui_SliderBrightHigh) lv_slider_set_value(ui_SliderBrightHigh, (EDIT_CFG.bright_high * 100 + 511) / 1023, LV_ANIM_OFF);
+    if (ui_SliderBrightLow)  lv_slider_set_value(ui_SliderBrightLow,  (EDIT_CFG.bright_low * 100 + 511) / 1023, LV_ANIM_OFF);
 
     static const uint8_t timeout_table[] = {30, 60, 120};
     if (ui_DropTimeout) {
         for(uint16_t i = 0; i < 3; i++) {
-            if(timeout_table[i] == g_sys_cfg.timeout_s) {
+            if(timeout_table[i] == EDIT_CFG.timeout_s) {
                 lv_dropdown_set_selected(ui_DropTimeout, i);
                 break;
             }
         }
     }
-    if (ui_SpinModbusAddr) lv_spinbox_set_value(ui_SpinModbusAddr, g_sys_cfg.modbus_addr);
+    if (ui_SpinModbusAddr) lv_spinbox_set_value(ui_SpinModbusAddr, EDIT_CFG.modbus_addr);
+    s_loading_settings = false;
 }
 
 // Forward declarations
@@ -320,46 +333,50 @@ static uint16_t get_dropdown_index_by_value(lv_obj_t *obj, int value, const int 
 
 void ui_sync_settings_to_widgets(void)
 {
+    const bool was_loading = s_loading_settings;
+    s_loading_settings = true;
+    settings_edit_refresh();
     LOG_C_INFO("[UI] Syncing widgets to RAM config...");
 
     // Screen 1
-    if (ui_DropMinTemp) lv_dropdown_set_selected(ui_DropMinTemp, (uint16_t)(g_sys_cfg.temp_min - 10));
-    if (ui_DropMaxTemp) lv_dropdown_set_selected(ui_DropMaxTemp, (uint16_t)(g_sys_cfg.temp_max - 25));
-    if (ui_DropMode)    lv_dropdown_set_selected(ui_DropMode,    g_sys_cfg.hvac_mode);
+    if (ui_DropMinTemp) lv_dropdown_set_selected(ui_DropMinTemp, (uint16_t)(EDIT_CFG.temp_min - 10));
+    if (ui_DropMaxTemp) lv_dropdown_set_selected(ui_DropMaxTemp, (uint16_t)(EDIT_CFG.temp_max - 25));
+    if (ui_DropMode)    lv_dropdown_set_selected(ui_DropMode,    EDIT_CFG.hvac_mode);
     
     // Control Type: Index 0="1-Relay" (val 1), Index 1="3-Speed Fan" (val 0)
     if (ui_DropCtrlType) {
-        lv_dropdown_set_selected(ui_DropCtrlType, (g_sys_cfg.ctrl_type == 0) ? 1 : 0);
+        lv_dropdown_set_selected(ui_DropCtrlType, (EDIT_CFG.ctrl_type == 0) ? 1 : 0);
     }
 
     // Screen 2
-    static const int hyst_table[] = {2, 5, 10, 12, 15, 20};
+    static const int hyst_table[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
     if (ui_DropHysteresis) {
-        lv_dropdown_set_selected(ui_DropHysteresis, get_dropdown_index_by_value(ui_DropHysteresis, g_sys_cfg.hysteresis_x10, hyst_table, 6));
+        lv_dropdown_set_selected(ui_DropHysteresis, get_dropdown_index_by_value(ui_DropHysteresis, EDIT_CFG.hysteresis_x10, hyst_table, 19));
     }
 
-    static const int stage_table[] = {5, 10, 15, 20, 25};
+    static const int stage_table[] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
     if (ui_DropStageStep) {
-        lv_dropdown_set_selected(ui_DropStageStep, get_dropdown_index_by_value(ui_DropStageStep, g_sys_cfg.stage_step_x10, stage_table, 5));
+        lv_dropdown_set_selected(ui_DropStageStep, get_dropdown_index_by_value(ui_DropStageStep, EDIT_CFG.stage_step_x10, stage_table, 21));
     }
 
-    if (ui_SpinSensorOffset) lv_spinbox_set_value(ui_SpinSensorOffset, g_sys_cfg.sensor_offset_x10);
+    if (ui_SpinSensorOffset) lv_spinbox_set_value(ui_SpinSensorOffset, EDIT_CFG.sensor_offset_x10);
 
     // Screen 3
-    if (ui_SliderBrightHigh) lv_slider_set_value(ui_SliderBrightHigh, g_sys_cfg.bright_high * 100 / 1023, LV_ANIM_OFF);
-    if (ui_SliderBrightLow)  lv_slider_set_value(ui_SliderBrightLow,  g_sys_cfg.bright_low  * 100 / 1023, LV_ANIM_OFF);
+    if (ui_SliderBrightHigh) lv_slider_set_value(ui_SliderBrightHigh, (EDIT_CFG.bright_high * 100 + 511) / 1023, LV_ANIM_OFF);
+    if (ui_SliderBrightLow)  lv_slider_set_value(ui_SliderBrightLow,  (EDIT_CFG.bright_low * 100 + 511) / 1023, LV_ANIM_OFF);
     
     static const uint8_t timeout_table[] = {30, 60, 120};
     if (ui_DropTimeout) {
         for(uint16_t i = 0; i < 3; i++) {
-            if(timeout_table[i] == g_sys_cfg.timeout_s) {
+            if(timeout_table[i] == EDIT_CFG.timeout_s) {
                 lv_dropdown_set_selected(ui_DropTimeout, i);
                 break;
             }
         }
     }
-    if (ui_SpinModbusAddr) lv_spinbox_set_value(ui_SpinModbusAddr, g_sys_cfg.modbus_addr);
-    if (ui_DropSelectTheme) lv_dropdown_set_selected(ui_DropSelectTheme, g_sys_cfg.theme_select);
+    if (ui_SpinModbusAddr) lv_spinbox_set_value(ui_SpinModbusAddr, EDIT_CFG.modbus_addr);
+    if (ui_DropSelectTheme) lv_dropdown_set_selected(ui_DropSelectTheme, EDIT_CFG.theme_select);
+    s_loading_settings = was_loading;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -387,42 +404,46 @@ void action_validate_pin(lv_event_t *e)
 
 void action_min_temp_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     uint16_t sel = lv_dropdown_get_selected(ui_DropMinTemp);
-    g_sys_cfg.temp_min = (int16_t)(10 + sel);
-    g_dirty_flags |= FLAG_TEMP_MIN;
+    EDIT_CFG.temp_min = (int16_t)(10 + sel);
+    settings_edit_mark(FLAG_TEMP_MIN);
 }
 
 void action_max_temp_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     uint16_t sel = lv_dropdown_get_selected(ui_DropMaxTemp);
-    g_sys_cfg.temp_max = (int16_t)(25 + sel); // Corrected base
-    g_dirty_flags |= FLAG_TEMP_MAX;
+    EDIT_CFG.temp_max = (int16_t)(25 + sel); // Corrected base
+    settings_edit_mark(FLAG_TEMP_MAX);
 }
 
 void action_hvac_mode_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     uint16_t sel = lv_dropdown_get_selected(ui_DropMode);
-    g_sys_cfg.hvac_mode = (uint8_t)sel;
-    g_dirty_flags |= FLAG_HVAC_MODE;
-    hvac_set_mode(g_sys_cfg.hvac_mode);
+    EDIT_CFG.hvac_mode = (uint8_t)sel;
+    settings_edit_mark(FLAG_HVAC_MODE);
+
 }
 
 void action_ctrl_type_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     uint16_t sel = lv_dropdown_get_selected(ui_DropCtrlType);
     // Index 0="1-Relay" → Modbus 1, Index 1="3-Speed Fan" → Modbus 0
     uint8_t ctrl_val = (sel == 0) ? 1 : 0;
-    g_sys_cfg.ctrl_type = ctrl_val;
-    g_dirty_flags |= FLAG_CTRL_TYPE;
-    modbus_set_relay_mode(ctrl_val);
+    EDIT_CFG.ctrl_type = ctrl_val;
+    settings_edit_mark(FLAG_CTRL_TYPE);
+
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -431,35 +452,38 @@ void action_ctrl_type_changed(lv_event_t *e)
 
 void action_hysteresis_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
-    static const int hyst_table[] = {2, 5, 10, 12, 15, 20};
+    static const int hyst_table[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
     uint16_t sel = lv_dropdown_get_selected(ui_DropHysteresis);
-    if (sel < 6) {
-        g_sys_cfg.hysteresis_x10 = (int16_t)hyst_table[sel];
-        g_dirty_flags |= FLAG_HYSTERESIS;
+    if (sel < 19) {
+        EDIT_CFG.hysteresis_x10 = (int16_t)hyst_table[sel];
+        settings_edit_mark(FLAG_HYSTERESIS);
     }
 }
 
 void action_stage_step_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
-    static const int stage_table[] = {5, 10, 15, 20, 25};
+    static const int stage_table[] = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
     uint16_t sel = lv_dropdown_get_selected(ui_DropStageStep);
-    if (sel < 5) {
-        g_sys_cfg.stage_step_x10 = (int16_t)stage_table[sel];
-        g_dirty_flags |= FLAG_STAGE_STEP;
+    if (sel < 21) {
+        EDIT_CFG.stage_step_x10 = (int16_t)stage_table[sel];
+        settings_edit_mark(FLAG_STAGE_STEP);
     }
 }
 
 void action_offset_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     int32_t val = lv_spinbox_get_value(ui_SpinSensorOffset);
-    g_sys_cfg.sensor_offset_x10 = (int16_t)val;
-    g_dirty_flags |= FLAG_SENSOR_OFFSET;
+    EDIT_CFG.sensor_offset_x10 = settings_clamp_sensor_offset(val);
+    settings_edit_mark(FLAG_SENSOR_OFFSET);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -470,13 +494,14 @@ extern void apply_theme(uint8_t theme);
 
 void action_theme_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     if (ui_DropSelectTheme) {
         uint16_t sel = lv_dropdown_get_selected(ui_DropSelectTheme);
         if (sel > 1) sel = 0;
-        g_sys_cfg.theme_select = (uint8_t)sel;
-        g_dirty_flags |= FLAG_THEME_SELECT;
+        EDIT_CFG.theme_select = (uint8_t)sel;
+        settings_edit_mark(FLAG_THEME_SELECT);
     }
 }
 
@@ -486,44 +511,48 @@ void action_theme_changed(lv_event_t *e)
 
 void action_bright_high_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     int32_t val = lv_slider_get_value(ui_SliderBrightHigh);
-    uint16_t mapped = (uint16_t)(val * 1023 / 100);
-    g_sys_cfg.bright_high = mapped;
-    g_dirty_flags |= FLAG_BRIGHT_HIGH;
+    uint16_t mapped = (uint16_t)((val * 1023 + 50) / 100);
+    EDIT_CFG.bright_high = mapped;
+    settings_edit_mark(FLAG_BRIGHT_HIGH);
     hal_backlight_set(mapped);
 }
 
 void action_bright_low_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     int32_t val = lv_slider_get_value(ui_SliderBrightLow);
-    g_sys_cfg.bright_low = (uint16_t)(val * 1023 / 100);
-    g_dirty_flags |= FLAG_BRIGHT_LOW;
+    EDIT_CFG.bright_low = (uint16_t)((val * 1023 + 50) / 100);
+    settings_edit_mark(FLAG_BRIGHT_LOW);
 }
 
 void action_timeout_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     static const uint8_t timeout_table[] = {30, 60, 120};
     uint16_t sel = lv_dropdown_get_selected(ui_DropTimeout);
     if (sel < sizeof(timeout_table))
-        g_sys_cfg.timeout_s = timeout_table[sel];
-    g_dirty_flags |= FLAG_TIMEOUT;
+        EDIT_CFG.timeout_s = timeout_table[sel];
+    settings_edit_mark(FLAG_TIMEOUT);
 }
 
 void action_modbus_changed(lv_event_t *e)
 {
+    if (s_loading_settings) return;
     (void)e;
     inactivity_reset();
     int32_t val = lv_spinbox_get_value(ui_SpinModbusAddr);
     if (val < 1)   val = 1;
     if (val > 247) val = 247;
-    g_sys_cfg.modbus_addr = (uint8_t)val;
-    g_dirty_flags |= FLAG_MODBUS_ADDR;
+    EDIT_CFG.modbus_addr = (uint8_t)val;
+    settings_edit_mark(FLAG_MODBUS_ADDR);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -533,7 +562,11 @@ void action_modbus_changed(lv_event_t *e)
 void action_save_and_exit(lv_event_t *e)
 {
     (void)e;
-    settings_save_dirty();
+    if (!settings_edit_save()) {
+        lv_obj_t *msg=lv_msgbox_create(NULL, "SAVE", "Saving failed. Retry SAVE.", NULL, true);
+        lv_obj_center(msg);
+        return;
+    }
     modbus_set_slave_addr(g_sys_cfg.modbus_addr);  // apply new address immediately
     inactivity_set_on_settings(false);
     _ui_screen_change(&ui_Main, LV_SCR_LOAD_ANIM_FADE_ON,
@@ -665,4 +698,15 @@ void show_mur_popup(void)
 
     // 3-second self-destruct timer
     s_popup_timer = lv_timer_create(popup_timer_cb, 3000, s_current_popup);
+}
+
+// Refresh untouched fields after remote writes; retain locally edited fields.
+void ui_settings_poll(void)
+{
+    if (settings_edit_refresh()) ui_sync_settings_to_widgets();
+    static uint16_t last_level = 0xffff;
+    uint16_t level = inactivity_is_screensaver_active() ? g_sys_cfg.bright_low :
+        (inactivity_on_settings_screen() ? EDIT_CFG.bright_high : g_sys_cfg.bright_high);
+    if (level != last_level) { hal_backlight_set(level); last_level=level; }
+    apply_theme(g_sys_cfg.theme_select);
 }

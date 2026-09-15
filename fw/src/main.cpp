@@ -23,6 +23,7 @@ extern "C" {
     void action_dnd_toggled(lv_event_t * e);
     void action_mur_toggled(lv_event_t * e);
     void settings3_loaded_cb(lv_event_t *e);
+    void ui_settings_poll(void);
     void action_arc_temp_changed(lv_event_t * e);
 }
 
@@ -174,6 +175,23 @@ static void update_temp_labels(void)
 }
 
 // ── HVAC mode images ─────────────────────────────────────────────────────────
+// Read the applied relay outputs, including AUTO and the all-off deadband.
+static void update_active_fan_indicator(void)
+{
+    if (!ui_LabelActiveFanSpeed) return;
+    const char *text = "";
+    if (g_mb.hreg[MB_REG_RELAY_MODE] == 0) {
+        unsigned mask = (hal_relay_is_on(1) ? 1U : 0U) |
+                        (hal_relay_is_on(2) ? 2U : 0U) |
+                        (hal_relay_is_on(3) ? 4U : 0U);
+        if (mask == 1) text = "I";
+        else if (mask == 2) text = "II";
+        else if (mask == 4) text = "III";
+    }
+    if (strcmp(lv_label_get_text(ui_LabelActiveFanSpeed), text) != 0)
+        lv_label_set_text(ui_LabelActiveFanSpeed, text);
+}
+
 static void update_hvac_icons(void)
 {
     uint8_t mode = g_mb.hreg[MB_REG_HVAC_MODE];
@@ -200,12 +218,16 @@ static void update_thermostat_widgets(void)
     // LV_STATE_PRESSED is set by LVGL for the entire duration of the touch.
     uint16_t mb_setpoint_x10 = g_mb.hreg[MB_REG_TARGET_TEMP];
     if (!lv_obj_has_state(ui_ArcTemp, LV_STATE_PRESSED) &&
-        mb_setpoint_x10 != s_last_displayed_setpoint) {
+        (mb_setpoint_x10 != s_last_displayed_setpoint ||
+         lv_arc_get_min_value(ui_ArcTemp) != g_sys_cfg.temp_min ||
+         lv_arc_get_max_value(ui_ArcTemp) != g_sys_cfg.temp_max ||
+         lv_arc_get_value(ui_ArcTemp) != mb_setpoint_x10 / 10)) {
         s_last_displayed_setpoint = mb_setpoint_x10;
         int sp = (int)(mb_setpoint_x10 / 10);
         // Remove only our specific callback to avoid silently discarding any
         // future callbacks registered on this object.
         lv_obj_remove_event_cb(ui_ArcTemp, action_arc_temp_changed);
+        lv_arc_set_range(ui_ArcTemp, g_sys_cfg.temp_min, g_sys_cfg.temp_max);
         lv_arc_set_value(ui_ArcTemp, sp);
         lv_obj_add_event_cb(ui_ArcTemp, action_arc_temp_changed, LV_EVENT_VALUE_CHANGED, NULL);
         lv_label_set_text_fmt(ui_LabelTargetTemp, "%d°", sp);
@@ -513,6 +535,7 @@ void loop(void)
 
     // Deadband relay timer — runs every loop() for accurate RELAY_DEADBAND_MS timing
     hvac_deadband_tick();
+    update_active_fan_indicator();
 
     // LVGL task handler (must be called frequently)
     lv_timer_handler();
@@ -524,6 +547,7 @@ void loop(void)
     if (now - t_hvac >= HVAC_UPDATE_MS) {
         t_hvac = now;
         hvac_update();
+        update_active_fan_indicator();
         update_temp_labels();
         update_hvac_icons();
         update_thermostat_widgets();  // sync Modbus→GUI for setpoint, fan, DND/MUR
@@ -565,6 +589,7 @@ void loop(void)
 
     // Deferred NVS save — fires once, 3 s after the last settings change
     settings_tick();
+    ui_settings_poll();
 
     // Window open popup management
     bool window_open = hvac_is_window_open();
