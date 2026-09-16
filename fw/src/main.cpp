@@ -160,6 +160,12 @@ static void update_clock_label(void)
 // ── Room temperature → UI ────────────────────────────────────────────────────
 static void update_temp_labels(void)
 {
+    if (hvac_temp_sensor_fault()) {
+        lv_label_set_text(ui_LabelCurrentVal, "--\xC2\xB0" "C");
+        lv_label_set_text(ui_LabelRoomTemp, "Innen:  --\xC2\xB0" "C");
+        return;
+    }
+
     float t = hvac_get_room_temp()
               + (g_sys_cfg.sensor_offset_x10 / 10.0f);
     char temp_buf[32]; // Buffer for formatted strings

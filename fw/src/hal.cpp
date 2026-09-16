@@ -602,6 +602,7 @@ void board_hal_init(void)
     // ── KORAK 3: Backlight (analogWrite) ────────────────────────────────
     LOG_INFO("[HAL] Step 3: Backlight (analogWrite)...");
     pinMode(PIN_LCD_BL, OUTPUT);
+    analogWriteFrequency(25000);  // 25 kHz backlight PWM, before first analogWrite
     hal_backlight_set(128);  // ~50% until NVS value is loaded
 
     // ── KORAK 4: Display init (gfx->begin) ──────────────────────────────

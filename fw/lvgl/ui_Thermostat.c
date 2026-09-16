@@ -4,6 +4,7 @@
 // Project name: HotelRoomThermostat
 
 #include "ui.h"
+#include "ui_mode_hold.h"
 
 lv_obj_t * ui_Thermostat = NULL;
 lv_obj_t * ui_TileThermostat = NULL;
@@ -248,6 +249,7 @@ void ui_Thermostat_screen_init(void)
     lv_obj_add_event_cb(ui_BtnFan, ui_event_BtnFan, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnPrevThermostat, ui_event_BtnPrevThermostat, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Thermostat, ui_event_Thermostat, LV_EVENT_ALL, NULL);
+    ui_mode_hold_init();
 
 }
 
